@@ -137,7 +137,7 @@ input.invalid{border-color:var(--danger)}
 .doc-row .link-ok{color:var(--green);font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap}
 
 /* ---------- Fila de programa editable (Parámetros) ---------- */
-.programa-row{border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;display:grid;grid-template-columns:90px 1fr 170px auto;gap:10px;align-items:center;margin-bottom:8px}
+.programa-row{border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;display:grid;grid-template-columns:90px 1fr 150px 110px 110px auto;gap:10px;align-items:center;margin-bottom:8px}
 .programa-row input,.programa-row select{font-size:13px;padding:8px 10px}
 .programa-row .money input{padding-left:22px}
 .programa-row .money::before{left:9px;font-size:13px}

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DocumentoRequerido;
 use App\Models\Parametro;
 use App\Models\Programa;
 use Carbon\Carbon;
@@ -9,27 +10,18 @@ use Carbon\Carbon;
 class EstudioCalculadora
 {
     /**
-     * Catálogo de documentos requeridos, con su condición según la
-     * actividad económica del codeudor. Replica DOCUMENTOS de app.js.
+     * Catálogo de documentos requeridos, configurable desde Parámetros
+     * (tabla documento_requeridos), con su condición según la actividad
+     * económica del codeudor.
      */
-    public static function documentos(): array
+    public static function documentos(): \Illuminate\Support\Collection
     {
-        return [
-            ['id' => 'ced_deudor', 'nombre' => 'Cédula del estudiante (deudor)', 'req' => fn ($act) => true],
-            ['id' => 'ced_codeudor', 'nombre' => 'Cédula del codeudor (deudor solidario)', 'req' => fn ($act) => true],
-            ['id' => 'cert_laboral', 'nombre' => 'Certificado laboral / de ingresos', 'req' => fn ($act) => $act === 'Empleado'],
-            ['id' => 'colillas', 'nombre' => 'Desprendibles de nómina (últimos meses)', 'req' => fn ($act) => $act === 'Empleado'],
-            ['id' => 'renta', 'nombre' => 'Declaración de renta', 'req' => fn ($act) => in_array($act, ['Independiente', 'Comerciante'], true)],
-            ['id' => 'extractos', 'nombre' => 'Extractos bancarios', 'req' => fn ($act) => in_array($act, ['Independiente', 'Comerciante'], true)],
-            ['id' => 'camara_rut', 'nombre' => 'Cámara de comercio / RUT', 'req' => fn ($act) => in_array($act, ['Independiente', 'Comerciante'], true)],
-            ['id' => 'pension', 'nombre' => 'Certificado / colilla de pensión', 'req' => fn ($act) => $act === 'Pensionado'],
-            ['id' => 'otros', 'nombre' => 'Otros documentos de soporte', 'req' => fn ($act) => false],
-        ];
+        return DocumentoRequerido::orderBy('orden')->get();
     }
 
     /**
      * Evalúa el estado de los documentos (enlaces) frente a la actividad económica.
-     * $documentos: [doc_id => url]
+     * $documentos: [clave => url]
      */
     public static function evaluarDocumentos(?string $actividad, array $documentos): array
     {
@@ -38,8 +30,8 @@ class EstudioCalculadora
         $detalle = [];
 
         foreach (self::documentos() as $doc) {
-            $esRequerido = (bool) $doc['req']($actividad);
-            $link = trim((string) ($documentos[$doc['id']] ?? ''));
+            $esRequerido = $doc->esRequerido($actividad);
+            $link = trim((string) ($documentos[$doc->clave] ?? ''));
             $esValido = (bool) preg_match('/^https?:\/\/.+/', $link);
 
             if ($esRequerido) {
@@ -50,8 +42,8 @@ class EstudioCalculadora
             }
 
             $detalle[] = [
-                'id' => $doc['id'],
-                'nombre' => $doc['nombre'],
+                'id' => $doc->clave,
+                'nombre' => $doc->nombre,
                 'requerido' => $esRequerido,
                 'link' => $link,
                 'valido' => $esValido,
@@ -68,15 +60,18 @@ class EstudioCalculadora
 
     /**
      * Valida cuota inicial (%) y número de cuotas contra los parámetros vigentes.
+     * La cuota inicial mínima puede estar sobreescrita por programa.
      * Replica validarParametrosCredito() de app.js.
      */
-    public static function validarParametrosCredito(Parametro $params, float $pct, int $nCuotas): array
+    public static function validarParametrosCredito(Parametro $params, Programa $programa, float $pct, int $nCuotas): array
     {
-        $pctValido = $pct >= $params->cuota_inicial_minima_pct && $pct <= 100;
+        $cuotaInicialMinima = $programa->cuotaInicialPct($params);
+
+        $pctValido = $pct >= $cuotaInicialMinima && $pct <= 100;
         $cuotasValido = $nCuotas >= $params->min_cuotas && $nCuotas <= $params->max_cuotas;
 
         return [
-            'pct' => $pctValido ? $pct : (float) $params->cuota_inicial_minima_pct,
+            'pct' => $pctValido ? $pct : $cuotaInicialMinima,
             'nCuotas' => $cuotasValido ? $nCuotas : min(max($nCuotas, $params->min_cuotas), $params->max_cuotas),
             'pctValido' => $pctValido,
             'cuotasValido' => $cuotasValido,
@@ -96,12 +91,12 @@ class EstudioCalculadora
         $pctSolicitado = (float) ($datos['cuota_inicial_pct'] ?? 0);
         $nCuotasSolicitado = (int) ($datos['n_cuotas'] ?? 0);
 
-        $validacion = self::validarParametrosCredito($params, $pctSolicitado, $nCuotasSolicitado);
+        $validacion = self::validarParametrosCredito($params, $programa, $pctSolicitado, $nCuotasSolicitado);
 
         $matricula = (int) $programa->matricula;
         $cuotaInicial = (int) round($matricula * ($validacion['pct'] / 100));
         $saldo = max($matricula - $cuotaInicial, 0);
-        $tasa = ((float) $params->tasa_mensual) / 100;
+        $tasa = $programa->tasaMensual($params) / 100;
         $nCuotas = (int) $validacion['nCuotas'];
 
         if ($tasa > 0) {
@@ -215,8 +210,12 @@ class EstudioCalculadora
         return ['nivel' => $nivel, 'razones' => $razones];
     }
 
-    public static function decisionTexto(string $nivel): array
+    public static function decisionTexto(string $nivel, ?Parametro $params = null): array
     {
+        if ($params) {
+            return $params->textoDecision($nivel);
+        }
+
         return match ($nivel) {
             'VERDE' => ['txt' => 'APROBADO', 'sub' => 'Cumple los criterios del estudio de crédito'],
             'AMARILLO' => ['txt' => 'REQUIERE REVISIÓN', 'sub' => 'Aprobable con garantía o análisis adicional'],

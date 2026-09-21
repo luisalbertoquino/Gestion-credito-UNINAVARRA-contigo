@@ -49,8 +49,12 @@
               <div class="field"><label>Apellidos</label><input type="text" name="est_apellidos" id="est_apellidos" placeholder="Apellidos" value="{{ old('est_apellidos') }}" required></div>
               <div class="field"><label>Tipo de documento</label><select name="est_tipoDoc" id="est_tipoDoc"><option>C.C.</option><option>T.I.</option><option>C.E.</option><option>Pasaporte</option></select></div>
               <div class="field"><label>Número de documento</label><input type="text" name="est_doc" id="est_doc" placeholder="Número" value="{{ old('est_doc') }}"></div>
+              @if ($params->campoVisible('est_telefono'))
               <div class="field"><label>Teléfono</label><input type="tel" name="est_telefono" id="est_telefono" placeholder="Celular" value="{{ old('est_telefono') }}"></div>
+              @endif
+              @if ($params->campoVisible('est_correo'))
               <div class="field"><label>Correo electrónico</label><input type="email" name="est_correo" id="est_correo" placeholder="correo@ejemplo.com" value="{{ old('est_correo') }}"></div>
+              @endif
               <div class="field"><label>Ingreso mensual del estudiante</label><div class="money"><input type="number" name="est_ingreso" id="est_ingreso" value="{{ old('est_ingreso', 0) }}" min="0"></div><span class="hint">Opcional — si el estudiante aporta ingresos</span></div>
             </div>
           </div>
@@ -68,15 +72,19 @@
               <div class="field"><label>Apellidos</label><input type="text" name="cod_apellidos" id="cod_apellidos" placeholder="Apellidos" value="{{ old('cod_apellidos') }}"></div>
               <div class="field"><label>Tipo de documento</label><select name="cod_tipoDoc" id="cod_tipoDoc"><option>C.C.</option><option>T.I.</option><option>C.E.</option><option>Pasaporte</option></select></div>
               <div class="field"><label>Número de documento</label><input type="text" name="cod_doc" id="cod_doc" placeholder="Número" value="{{ old('cod_doc') }}"></div>
+              @if ($params->campoVisible('cod_relacion'))
               <div class="field"><label>Relación con el estudiante</label>
                 <select name="cod_relacion" id="cod_relacion"><option>Padre/Madre</option><option>Hermano(a)</option><option>Cónyuge</option><option>Otro familiar</option><option>Otro</option></select>
               </div>
+              @endif
               <div class="field"><label>Actividad económica</label>
                 <select name="cod_actividad" id="cod_actividad"><option>Empleado</option><option>Independiente</option><option>Comerciante</option><option>Pensionado</option></select>
               </div>
               <div class="field"><label>Ingreso mensual</label><div class="money"><input type="number" name="cod_ingreso" id="cod_ingreso" value="{{ old('cod_ingreso', 0) }}" min="0"></div><span class="hint">Comprobable</span></div>
               <div class="field"><label>Egresos / gastos mensuales</label><div class="money"><input type="number" name="cod_egresos" id="cod_egresos" value="{{ old('cod_egresos', 0) }}" min="0"></div></div>
+              @if ($params->campoVisible('cod_otras_deudas'))
               <div class="field"><label>Cuota de otras deudas</label><div class="money"><input type="number" name="cod_otrasDeudas" id="cod_otrasDeudas" value="{{ old('cod_otrasDeudas', 0) }}" min="0"></div><span class="hint">Créditos vigentes</span></div>
+              @endif
             </div>
           </div>
         </div>
@@ -96,17 +104,18 @@
                   @foreach (['Pregrado', 'Posgrado'] as $grupo)
                     <optgroup label="{{ $grupo }}">
                       @foreach ($programas->where('grupo', $grupo) as $p)
-                        <option value="{{ $p->id }}" data-matricula="{{ $p->matricula }}">{{ $p->nombre }} — $ {{ number_format($p->matricula, 0, ',', '.') }}</option>
+                        <option value="{{ $p->id }}" data-matricula="{{ $p->matricula }}" data-cuota-inicial="{{ $p->cuotaInicialPct($params) }}" data-tasa="{{ $p->tasaMensual($params) }}">{{ $p->nombre }} — $ {{ number_format($p->matricula, 0, ',', '.') }}</option>
                       @endforeach
                     </optgroup>
                   @endforeach
                 </select>
               </div>
+              @php($cuotaInicialInicial = ($programas->first() ?? null)?->cuotaInicialPct($params) ?? $params->cuota_inicial_minima_pct)
               <div class="field">
                 <label>Cuota inicial (%)</label>
-                <input type="number" name="cuotaInicialPct" id="cuotaInicialPct" value="{{ old('cuota_inicial_pct', $params->cuota_inicial_minima_pct) }}" min="{{ $params->cuota_inicial_minima_pct }}" max="100" step="1">
+                <input type="number" name="cuotaInicialPct" id="cuotaInicialPct" value="{{ old('cuota_inicial_pct', $cuotaInicialInicial) }}" min="{{ $cuotaInicialInicial }}" max="100" step="1">
                 <span class="error-text" id="err_cuotaInicial">La cuota inicial no puede ser menor al mínimo permitido.</span>
-                <span class="hint" id="hint_cuotaInicial">Mínimo permitido: {{ $params->cuota_inicial_minima_pct }}%</span>
+                <span class="hint" id="hint_cuotaInicial">Mínimo permitido: {{ $cuotaInicialInicial }}%</span>
               </div>
               <div class="field">
                 <label>Número de cuotas</label>
@@ -115,7 +124,9 @@
                 <span class="hint" id="hint_numCuotas">Rango permitido: {{ $params->min_cuotas }} a {{ $params->max_cuotas }} cuotas</span>
               </div>
               <div class="field"><label>Fecha de matrícula (cuota inicial)</label><input type="date" name="fechaMatricula" id="fechaMatricula" value="{{ old('fecha_matricula', now()->toDateString()) }}"></div>
+              @if ($params->campoVisible('fecha_primera_cuota'))
               <div class="field"><label>Fecha de la primera cuota</label><input type="date" name="fechaPrimeraCuota" id="fechaPrimeraCuota" value="{{ old('fecha_primera_cuota', now()->toDateString()) }}"></div>
+              @endif
             </div>
           </div>
         </div>
@@ -131,13 +142,13 @@
             <p class="hint" style="margin-bottom:14px">Los documentos requeridos se ajustan a la actividad económica del codeudor (<strong id="txtActividad">Empleado</strong>). Pega el enlace donde ya tengas cada documento alojado (Google Drive, OneDrive, etc.) — no se suben archivos a este sistema.</p>
             <div id="docsList">
               @foreach ($documentos as $doc)
-                <div class="doc-row" data-doc-row="{{ $doc['id'] }}">
+                <div class="doc-row" data-doc-row="{{ $doc->clave }}">
                   <div class="info">
-                    <div class="name">{{ $doc['nombre'] }}</div>
+                    <div class="name">{{ $doc->nombre }}</div>
                     <div class="req-or-opt-label"></div>
                   </div>
                   <div style="flex:2;display:flex;align-items:center;gap:8px">
-                    <input type="url" data-doc="{{ $doc['id'] }}" name="documentos[{{ $doc['id'] }}]" placeholder="https://drive.google.com/... o cualquier enlace">
+                    <input type="url" data-doc="{{ $doc->clave }}" name="documentos[{{ $doc->clave }}]" placeholder="https://drive.google.com/... o cualquier enlace">
                     <span class="link-ok" style="display:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>Enlace guardado</span>
                   </div>
                 </div>
@@ -273,18 +284,30 @@
     return document.getElementById('cod_actividad').value;
   }
 
+  function actualizarHintCuotaInicial() {
+    var select = document.getElementById('programa');
+    var option = select.options[select.selectedIndex];
+    if (!option) return;
+    var minimo = option.dataset.cuotaInicial || '0';
+    var pctInput = document.getElementById('cuotaInicialPct');
+    pctInput.min = minimo;
+    setText('hint_cuotaInicial', 'Mínimo permitido: ' + minimo + '%');
+    if (Number(pctInput.value) < Number(minimo)) {
+      pctInput.value = minimo;
+    }
+  }
+
+  document.getElementById('programa').addEventListener('change', actualizarHintCuotaInicial);
+
+  var REGLAS_DOCUMENTOS = @json($documentos->map(fn ($d) => ['clave' => $d->clave, 'siempre' => $d->siempre_requerido, 'actividades' => $d->actividades ?? []]));
+
   function actualizarDocsLabels() {
     var actividad = actividadActual();
     setText('txtActividad', actividad);
-    var req = {
-      ced_deudor: true, ced_codeudor: true,
-      cert_laboral: actividad === 'Empleado', colillas: actividad === 'Empleado',
-      renta: actividad === 'Independiente' || actividad === 'Comerciante',
-      extractos: actividad === 'Independiente' || actividad === 'Comerciante',
-      camara_rut: actividad === 'Independiente' || actividad === 'Comerciante',
-      pension: actividad === 'Pensionado',
-      otros: false
-    };
+    var req = {};
+    REGLAS_DOCUMENTOS.forEach(function (d) {
+      req[d.clave] = d.siempre || d.actividades.indexOf(actividad) !== -1;
+    });
     document.querySelectorAll('#docsList .doc-row').forEach(function (row) {
       var id = row.getAttribute('data-doc-row');
       var esReq = !!req[id];
@@ -293,6 +316,11 @@
       label.textContent = esReq ? 'Requerido' : 'Opcional';
       label.className = esReq ? 'req-label' : 'opt-label';
     });
+  }
+
+  function valorDe(id, porDefecto) {
+    var el = document.getElementById(id);
+    return el ? el.value : (porDefecto !== undefined ? porDefecto : '');
   }
 
   function datosFormulario() {
@@ -305,12 +333,12 @@
       est_ingreso: document.getElementById('est_ingreso').value,
       cod_ingreso: document.getElementById('cod_ingreso').value,
       cod_egresos: document.getElementById('cod_egresos').value,
-      cod_otrasDeudas: document.getElementById('cod_otrasDeudas').value,
+      cod_otrasDeudas: valorDe('cod_otrasDeudas', 0),
       cod_actividad: actividadActual(),
       cuotaInicialPct: document.getElementById('cuotaInicialPct').value,
       numCuotas: document.getElementById('numCuotas').value,
       fechaMatricula: document.getElementById('fechaMatricula').value,
-      fechaPrimeraCuota: document.getElementById('fechaPrimeraCuota').value,
+      fechaPrimeraCuota: valorDe('fechaPrimeraCuota', ''),
       documentos: documentos
     };
   }

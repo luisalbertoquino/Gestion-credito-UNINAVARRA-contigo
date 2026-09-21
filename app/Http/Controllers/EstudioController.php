@@ -47,7 +47,7 @@ class EstudioController extends Controller
 
         if (! $calc['params']['valido']) {
             return response()->json($payload + [
-                'hintCuotaInicialMinima' => (int) $params->cuota_inicial_minima_pct,
+                'hintCuotaInicialMinima' => (int) $programa->cuotaInicialPct($params),
                 'hintMinCuotas' => (int) $params->min_cuotas,
                 'hintMaxCuotas' => (int) $params->max_cuotas,
                 'docsInfo' => $docsInfo,
@@ -55,7 +55,7 @@ class EstudioController extends Controller
         }
 
         $decision = EstudioCalculadora::calcularDecision($params, $calc, $docsInfo);
-        $decisionTxt = EstudioCalculadora::decisionTexto($decision['nivel']);
+        $decisionTxt = EstudioCalculadora::decisionTexto($decision['nivel'], $params);
 
         return response()->json($payload + [
             'decision' => $decision['nivel'],
@@ -73,6 +73,8 @@ class EstudioController extends Controller
                 'nombre' => $programa->nombre,
                 'grupo' => $programa->grupo,
                 'matricula' => $programa->matricula,
+                'cuotaInicialPct' => $programa->cuotaInicialPct($params),
+                'tasaMensual' => $programa->tasaMensual($params),
             ],
             'resumen' => [
                 'pct' => $calc['params']['pct'],
@@ -159,7 +161,7 @@ class EstudioController extends Controller
             'user_id' => $request->user()?->id,
         ]);
 
-        $decisionTxt = EstudioCalculadora::decisionTexto($decision['nivel']);
+        $decisionTxt = EstudioCalculadora::decisionTexto($decision['nivel'], $params);
 
         return redirect()->route('estudios.index')
             ->with('status', 'Estudio guardado: '.$estudio->nombreEstudiante().' — '.$decisionTxt['txt']);
@@ -184,10 +186,11 @@ class EstudioController extends Controller
     public function exportarCsv(): StreamedResponse
     {
         $estudios = Estudio::orderByDesc('created_at')->get();
+        $params = Parametro::actual();
 
         $filename = 'historico-estudios-credito-uninavarra-'.now()->format('Y-m-d').'.csv';
 
-        $callback = function () use ($estudios) {
+        $callback = function () use ($estudios, $params) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8
 
@@ -198,7 +201,7 @@ class EstudioController extends Controller
             ], ';');
 
             foreach ($estudios as $e) {
-                $decisionTxt = EstudioCalculadora::decisionTexto($e->decision);
+                $decisionTxt = EstudioCalculadora::decisionTexto($e->decision, $params);
                 fputcsv($out, [
                     $e->created_at?->format('d/m/Y H:i'),
                     $e->nombreEstudiante(),
