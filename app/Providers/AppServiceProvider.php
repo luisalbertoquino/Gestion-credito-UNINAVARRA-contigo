@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            view()->composer('layouts.creditos', function (View $view) {
+            view()->composer(['layouts.creditos', 'layouts.auth-creditos'], function (View $view) {
                 $view->with('nombreInstitucion', Parametro::actual()->nombre_institucion);
             });
         });

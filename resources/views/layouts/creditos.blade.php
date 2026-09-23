@@ -11,8 +11,10 @@
 
 <header class="top">
   <div class="wrap">
+    <div class="brand-shield-top">
+      <img src="{{ asset('images/escudo-bandera.webp') }}" alt="{{ $nombreInstitucion ?? 'UNINAVARRA Contigo' }}">
+    </div>
     <div class="row">
-      <div class="brand-shield">UN</div>
       <div>
         <h1>Estudio de Crédito · {{ $nombreInstitucion ?? 'UNINAVARRA Contigo' }}</h1>
         <div class="sub">Plan de financiación de matrícula</div>
