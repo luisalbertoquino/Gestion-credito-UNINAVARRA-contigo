@@ -9,7 +9,7 @@
   <button class="btn gold sm" type="submit" form="form-estudio">
     <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>Guardar
   </button>
-  <button class="btn ghost-dark sm" type="button" id="btnImprimir">
+  <button class="btn ghost-dark sm" type="button" id="btnImprimir" hidden>
     <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>Imprimir / PDF
   </button>
 @endsection
@@ -384,16 +384,22 @@
 
     var resultsBlock = document.getElementById('resultsBlock');
     var blockedNotice = document.getElementById('paramsBlockedNotice');
+    var btnImprimir = document.getElementById('btnImprimir');
 
     if (!data.valido) {
       resultsBlock.style.display = 'none';
       blockedNotice.style.display = 'block';
       setText('tagCuotas', '— cuotas');
       document.getElementById('planBody').innerHTML = '';
+      btnImprimir.hidden = true;
       return;
     }
     resultsBlock.style.display = '';
     blockedNotice.style.display = 'none';
+
+    var datosCompletos = document.getElementById('est_nombre').value.trim() !== ''
+      && document.getElementById('est_apellidos').value.trim() !== '';
+    btnImprimir.hidden = !datosCompletos;
 
     setText('tagCuotas', data.resumen.nCuotas + ' cuota' + (data.resumen.nCuotas === 1 ? '' : 's'));
 

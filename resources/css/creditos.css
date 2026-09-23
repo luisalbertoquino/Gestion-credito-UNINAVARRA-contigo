@@ -33,15 +33,17 @@ h1,h2,h3{font-family:var(--serif);letter-spacing:-.01em;margin:0}
 a{color:inherit}
 
 /* ---------- Header ---------- */
-header.top{background:linear-gradient(155deg,var(--charcoal) 0%,#2c211d 55%,var(--primary-d) 130%);color:#fff;padding:0 0 18px;position:relative}
+header.top{background:linear-gradient(155deg,var(--charcoal) 0%,#2c211d 55%,var(--primary-d) 130%);color:#fff;position:relative}
 header.top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold) 0%,var(--primary) 45%,var(--gold) 100%)}
-header.top .brand-shield-top{display:flex;justify-content:center;padding:14px 0 10px}
-header.top .brand-shield-top img{height:56px;width:auto;display:block}
+header.top .header-inner{max-width:1240px;margin:0 auto;padding:20px 24px 16px}
+header.top .brand-shield-top{display:flex;justify-content:center;padding:4px 0 14px}
+header.top .brand-shield-top img{height:88px;width:auto;display:block}
 header.top .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 header.top h1{font-size:19px;font-weight:600;color:#fff}
 header.top .sub{font-size:11.5px;opacity:.72;letter-spacing:.08em;text-transform:uppercase;font-weight:500;margin-top:2px}
 header.top .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .btn{font:inherit;font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:999px;border:1.5px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px;text-decoration:none;transition:background .15s,border-color .15s,color .15s}
+.btn[hidden]{display:none}
 .btn.ghost-dark{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.2)}
 .btn.ghost-dark:hover{background:rgba(255,255,255,.15)}
 .btn.gold{background:var(--gold);color:#fff}
@@ -56,7 +58,7 @@ header.top .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-i
 .icon{flex:none;vertical-align:-3px}
 
 /* ---------- Tabs ---------- */
-nav.tabs{display:flex;gap:2px;margin-top:14px}
+nav.tabs{display:flex;justify-content:center;gap:2px;margin-top:18px}
 nav.tabs a{background:transparent;color:rgba(255,255,255,.68);border:none;padding:10px 16px;border-radius:10px 10px 0 0;font:inherit;font-size:13.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
 nav.tabs a:hover{color:#fff;background:rgba(255,255,255,.06)}
 nav.tabs a.active{background:var(--bg);color:var(--ink);font-weight:600}
@@ -175,7 +177,7 @@ table.hist tbody tr:hover{background:var(--bg)}
 .auth-body{margin:0;min-height:100vh;background:linear-gradient(155deg,var(--charcoal) 0%,#2c211d 55%,var(--primary-d) 130%);display:flex;flex-direction:column;align-items:center;padding:40px 20px;font-family:var(--sans)}
 .auth-wrap{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center}
 .auth-shield{padding-top:8px}
-.auth-shield img{height:72px;width:auto;display:block}
+.auth-shield img{height:104px;width:auto;display:block}
 .auth-title{font-family:var(--serif);color:#fff;font-size:24px;font-weight:700;margin:16px 0 2px;text-align:center}
 .auth-sub{color:rgba(255,255,255,.72);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;margin-bottom:28px;text-align:center}
 .auth-card{width:100%;margin-bottom:16px}
@@ -185,7 +187,7 @@ table.hist tbody tr:hover{background:var(--bg)}
 .auth-card .remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .auth-card .remember input{width:auto}
 .auth-card a.link{font-size:13px;color:var(--primary);text-decoration:underline;text-underline-offset:2px}
-.auth-card .btn.primary{width:100%;justify-content:center;padding:12px 16px}
+.auth-card .btn.primary{width:100%;justify-content:center;padding:12px 16px;margin-top:22px}
 .auth-status{font-size:13px;color:var(--green);font-weight:600;margin-bottom:16px}
 .auth-errors{background:var(--danger-tint);border:1px solid #f0c4c8;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;color:#a3352b}
 .auth-errors ul{margin:0;padding-left:18px}
