@@ -314,7 +314,8 @@
       row.classList.toggle('required', esReq);
       var label = row.querySelector('.req-or-opt-label');
       label.textContent = esReq ? 'Requerido' : 'Opcional';
-      label.className = esReq ? 'req-label' : 'opt-label';
+      label.classList.toggle('req-label', esReq);
+      label.classList.toggle('opt-label', !esReq);
     });
   }
 
@@ -458,7 +459,6 @@
     }
   });
 
-  actualizarDocsLabels();
   recalcular();
 })();
 </script>
